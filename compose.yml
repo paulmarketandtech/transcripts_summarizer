@@ -1,0 +1,52 @@
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    container_name: summarizer-postgres
+    restart: unless-stopped
+    env_file: .env
+    command: ["postgres", "-c", "log_min_duration_statement=500"]
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  api:
+    build: .
+    container_name: summarizer-api
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app
+      - ./main.py:/app/main.py
+    command:
+      ["fastapi", "dev", "main.py", "--host", "0.0.0.0", "--port", "8000"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: summarizer-pgadmin
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "127.0.0.1:5050:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  pgadmin-data:
