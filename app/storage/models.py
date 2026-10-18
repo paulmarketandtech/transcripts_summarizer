@@ -107,8 +107,7 @@ class TranscriptChunk(Base):
     word_count: Mapped[int | None] = mapped_column()
     sentence_count: Mapped[int | None] = mapped_column()
 
-    # Vector DB reference (not stored here),ID in ChromaDB
-    vector_id: Mapped[str | None] = mapped_column(String(100))
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(768))
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
@@ -139,9 +138,6 @@ class LLMChunkMetaData(Base):
     load_duration: Mapped[float | None] = mapped_column()
     total_duration: Mapped[float | None] = mapped_column()
 
-    # Vector DB reference (not stored here),ID in ChromaDB
-    vector_id: Mapped[str | None] = mapped_column(String(100))
-
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -170,7 +166,7 @@ class Summary(Base):
     word_count: Mapped[int | None] = mapped_column()
     processing_time_seconds: Mapped[float | None] = mapped_column()
 
-    vector_id: Mapped[str | None] = mapped_column(String(100))
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(768))
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
@@ -205,7 +201,7 @@ class SingleStockSummary(Base):
     system_prompt_used: Mapped[str | None] = mapped_column(String(100))
     user_prompt_used: Mapped[str | None] = mapped_column(String(100))
 
-    vector_id: Mapped[str | None] = mapped_column(String(100))
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(768))
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
