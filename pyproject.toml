@@ -16,6 +16,7 @@ dependencies = [
   "pyyaml>=6.0.3",
   "slowapi>=0.1.10",
   "sqlalchemy>=2.0.51",
+  "pgvector>=0.5.1",
   "uvicorn[standard]>=0.52.4",
 ]
 
@@ -28,6 +29,7 @@ packages = ["app"]
 
 [dependency-groups]
 dev = [
+    "httpx>=0.28.1",
     "bandit[toml]>=1.9.4",
     "ruff>=0.16.2",
 ]
