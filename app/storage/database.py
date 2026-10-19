@@ -17,7 +17,6 @@ SessionReadOnly = sessionmaker(bind=engine_readonly, autoflush=False, autocommit
 SessionApp = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 
-"""
 @contextmanager
 def get_session_read_only() -> Session:
     session = SessionReadOnly()
@@ -29,7 +28,6 @@ def get_session_read_only() -> Session:
         raise
     finally:
         session.close()
-"""
 
 
 @contextmanager

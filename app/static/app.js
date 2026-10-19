@@ -107,23 +107,70 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
-// ─── RAG search (placeholder, logic later) ─────────────
+// ─── RAG search ────────────────────────────────────────
 async function handleRagSearch(e) {
     e.preventDefault();
+
     const query = document.getElementById('rag-query').value.trim();
     const resultsDiv = document.getElementById('rag-results');
+    const statusSpan = document.getElementById('rag-status');
+    const submitBtn = document.getElementById('rag-submit');
 
-    if (!query) return;
+    if (!query || query.length < 3) {
+        resultsDiv.innerHTML = '<div class="empty">Please enter at least 3 characters.</div>';
+        return;
+    }
 
-    resultsDiv.innerHTML = '<div class="empty">Searching...</div>';
+    // Show loading state
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Searching...';
+    statusSpan.textContent = 'Embedding your query and searching...';
+    resultsDiv.innerHTML = '';
 
-    // TODO: wire up to /api/public/rag endpoint when ready
-    setTimeout(() => {
-        resultsDiv.innerHTML = `
-            <div class="empty">
-                RAG endpoint not implemented yet. Query was:<br>
-                <em>"${escapeHtml(query)}"</em>
+    try {
+        const res = await fetch('/public/rag', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: query }),
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.detail || 'Search failed');
+        }
+
+        const results = await res.json();
+        statusSpan.textContent = `Found ${results.length} results`;
+        renderRagResults(results);
+
+    } catch (err) {
+        statusSpan.textContent = '';
+        resultsDiv.innerHTML = `<div class="empty">Error: ${escapeHtml(err.message)}</div>`;
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Search';
+    }
+}
+
+function renderRagResults(results) {
+    const resultsDiv = document.getElementById('rag-results');
+
+    if (results.length === 0) {
+        resultsDiv.innerHTML = '<div class="empty">No relevant results found.</div>';
+        return;
+    }
+
+    resultsDiv.innerHTML = results.map((r, i) => `
+        <div class="rag-card">
+            <div class="rag-card-header">
+                <span class="rag-rank">#${i + 1}</span>
+                <span class="rag-source badge">${escapeHtml(r.source)}</span>
+                <span class="rag-similarity">${(r.similarity * 100).toFixed(1)}% match</span>
             </div>
-        `;
-    }, 500);
+            <div class="rag-card-body">${escapeHtml(r.text)}</div>
+            <div class="rag-card-footer">
+                <span class="rag-video-id">Video: ${r.video_id.slice(0, 8)}...</span>
+            </div>
+        </div>
+    `).join('');
 }
