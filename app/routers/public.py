@@ -9,12 +9,15 @@ from sqlalchemy.orm import Session
 from app.dependencies import get_db_read
 from app.schemas.public import (
     Page,
+    RagQuery,
+    RagResult,
     VideoPublicDetail,
     VideoPublicItem,
     VideoSearchParams,
 )
+from app.services.rag import RagService
 from app.services.videos import VideoService
-from app.storage.database import get_session
+from app.storage.database import get_session, get_session_read_only
 from app.storage.models import Summary, Video
 
 router = APIRouter(prefix="/public", tags=["public"])
@@ -43,11 +46,23 @@ def list_videos(
 
 @router.get("/vid/{video_id}")
 def get_vid(video_id: UUID):
-    with get_session() as session:
+    with get_session_read_only() as session:
         video = VideoService(session).get_detail(video_id)
         if not video:
             raise HTTPException(404, "Video not found")
         return video
+
+
+@router.post("/rag", response_model=list[RagResult])
+def rag_search(
+    body: RagQuery,
+    db: Session = Depends(get_db_read),
+):
+    if len(body.query.strip()) < 3:
+        raise HTTPException(400, "Query too short")
+
+    service = RagService(db)
+    return service.search(body.query, top_k=5)
 
 
 def escape_like(value: str) -> str:

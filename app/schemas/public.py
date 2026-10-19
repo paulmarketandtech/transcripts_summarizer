@@ -80,3 +80,17 @@ class VideoSearchParams(BaseModel):
         ):
             raise ValueError("published_after must be on or before published_before")
         return self
+
+
+# ---------- RAG schema ----------
+
+
+class RagQuery(BaseModel):
+    query: str
+
+
+class RagResult(BaseModel):
+    video_id: str
+    text: str
+    source: str
+    similarity: float
