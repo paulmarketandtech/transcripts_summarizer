@@ -12,7 +12,7 @@ async function toggleSummary(videoId) {
             const res = await fetch(`/public/vid/${videoId}`);
             if (!res.ok) throw new Error('Failed to load');
             const data = await res.json();
-            contentDiv.textContent = data.summary.final_report || 'No summary available.';
+            contentDiv.textContent = data.summary || 'No summary available.';
             contentDiv.dataset.loaded = 'true';
         } catch (err) {
             contentDiv.textContent = 'Error loading summary.';
